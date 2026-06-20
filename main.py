@@ -204,4 +204,37 @@ else:
     detailed_results = []
     
     for idx, prob in enumerate(PROBLEMS):
-        user_ans = st.session_state.quiz_answers
+        user_ans = st.session_state.user_answers.get(idx, "미선택")
+        is_correct = (user_ans == prob['answer'])
+        if is_correct:
+            score += 1
+        detailed_results.append({
+            "title": prob['title'],
+            "user": user_ans,
+            "system": prob['answer'],
+            "result": "⭕ 정답" if is_correct else "❌ 오답"
+        })
+        
+    # 대시보드 스코어 출력
+    st.metric(label="내 점수", value=f"{score} / {len(PROBLEMS)} 문제 맞춤", delta=f"{score*20}점")
+    
+    if score == len(PROBLEMS):
+        st.balloons()
+        st.success("🥇 대단해요! 모든 순서도 문제의 빈칸을 완벽하게 맞췄습니다!")
+    else:
+        st.warning("틀린 문제를 다시 확인하고 순서도의 흐름을 분석해 보세요.")
+        
+    # 세부 리포트 테이블 출력
+    st.write("### 📋 문항별 상세 분석")
+    for idx, res in enumerate(detailed_results):
+        with st.container():
+            st.markdown(f"#### {res['title']} → **{res['result']}**")
+            st.text(f"내가 고른 답: {res['user']}")
+            st.text(f"실제 정답: {res['system']}")
+            st.divider()
+            
+    if st.button("🔄 처음부터 다시 풀기"):
+        st.session_state.current_idx = 0
+        st.session_state.user_answers = {}
+        st.session_state.submitted = False
+        st.rerun()
