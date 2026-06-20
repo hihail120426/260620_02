@@ -109,3 +109,69 @@ if not st.session_state.submitted:
 
     with col1:
         st.markdown(f"### {current_problem['title']}")
+        st.info(current_problem['scenario'])
+        
+        saved_ans = st.session_state.user_answers.get(st.session_state.current_idx, None)
+        selected_option = st.radio(
+            "빈칸에 들어갈 올바른 블록 내용을 선택하세요:", 
+            current_problem['options'], 
+            index=current_problem['options'].index(saved_ans) if saved_ans in current_problem['options'] else 0,
+            key=f"prob_{st.session_state.current_idx}_radio"
+        )
+        st.session_state.user_answers[st.session_state.current_idx] = selected_option
+
+        b_col1, b_col2, b_col3 = st.columns(3)
+        with b_col1:
+            if st.button("이전 문제", disabled=(st.session_state.current_idx == 0)):
+                st.session_state.current_idx -= 1
+                st.rerun()
+        with b_col2:
+            if st.button("다음 문제", disabled=(st.session_state.current_idx == len(PROBLEMS) - 1)):
+                st.session_state.current_idx += 1
+                st.rerun()
+        with b_col3:
+            if st.button("최종 정답 확인", type="primary"):
+                st.session_state.submitted = True
+                st.rerun()
+
+    with col2:
+        st.markdown("### 현재 순서도")
+        dot = graphviz.Digraph()
+        dot.attr(rankdir='TB', size='7,7', fontname='Malgun Gothic') 
+        dot.attr('node', fontname='Malgun Gothic') 
+        dot.attr('edge', fontname='Malgun Gothic') 
+        
+        for node_id, label, shape in current_problem['nodes']:
+            display_label = label
+            fill_color = "#f5f5f5"
+            
+            if label == "[ ? ]":
+                if st.session_state.current_idx in st.session_state.user_answers:
+                    display_label = st.session_state.user_answers[st.session_state.current_idx]
+                    fill_color = "#e1f5fe"
+                else:
+                    fill_color = "#ffe0b2"
+                
+            dot.node(node_id, display_label, shape=shape, style="filled", fillcolor=fill_color)
+            
+        for edge in current_problem['edges']:
+            if len(edge) == 3:
+                dot.edge(edge[0], edge[1], label=edge[2])
+            else:
+                dot.edge(edge[0], edge[1])
+        st.graphviz_chart(dot)
+
+else:
+    st.markdown("## 챌린지 최종 결과")
+    score = 0
+    for idx, prob in enumerate(PROBLEMS):
+        if st.session_state.user_answers.get(idx) == prob['answer']:
+            score += 1
+            
+    st.metric("점수", f"{score} / {len(PROBLEMS)}")
+    
+    if st.button("처음부터 다시 풀기"):
+        st.session_state.current_idx = 0
+        st.session_state.user_answers = {}
+        st.session_state.submitted = False
+        st.rerun()
