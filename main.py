@@ -2,7 +2,7 @@ import streamlit as st
 import graphviz
 
 # --- 페이지 설정 ---
-st.set_page_config(page_title="중1 프로그래밍: 순서도 빈칸 채우기 챌린지", layout="wide")
+st.set_page_config(page_title="순서도 빈칸 채우기", layout="wide")
 
 # --- 5가지 문제 데이터 정의 ---
 PROBLEMS = [
@@ -110,7 +110,7 @@ if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
 # --- 메인 화면 구성 ---
-st.title("🧩 중1 프로그래밍 문제해결과 순서도 맞추기 대화방")
+st.title("🧩 순서도 맞추기 대화방")
 st.subheader("순서도 빈칸을 채워 알고리즘을 완성해 보세요!")
 st.write("---")
 
