@@ -4,15 +4,7 @@ import graphviz
 # --- 페이지 설정 및 스타일 ---
 st.set_page_config(page_title="중1 프로그래밍: 순서도 챌린지", layout="wide")
 
-st.markdown("""
-    <style>
-    .stSelectbox label { font-size: 1.1rem; font-weight: bold; color: #1f77b4; }
-    .stRadio label { font-size: 1.1rem; }
-    div[data-testid="stRadio"] > div { display: flex; flex-direction: column; gap: 10px; }
-    </style>
-""", unsafe_allow_html=True)
-
-# --- 문제 데이터 정의 (아이콘 및 이모지 제거) ---
+# --- 문제 데이터 정의 ---
 PROBLEMS = [
     {
         "title": "1번 미션: 스마트 가로등 제어",
@@ -145,12 +137,10 @@ if not st.session_state.submitted:
             display_label = label
             fill_color = "#f5f5f5"
             
+            # 여기서 [ ? ]를 항상 고정하여 정답이 노출되지 않게 수정함
             if label == "[ ? ]":
-                if st.session_state.current_idx in st.session_state.user_answers:
-                    display_label = st.session_state.user_answers[st.session_state.current_idx]
-                    fill_color = "#e1f5fe"
-                else:
-                    fill_color = "#ffe0b2"
+                display_label = "[ ? ]"
+                fill_color = "#ffe0b2"
                 
             dot.node(node_id, display_label, shape=shape, style="filled", fillcolor=fill_color)
             
@@ -165,7 +155,9 @@ else:
     st.markdown("## 챌린지 최종 결과")
     score = 0
     for idx, prob in enumerate(PROBLEMS):
-        if st.session_state.user_answers.get(idx) == prob['answer']:
+        # 문법 오류 수정: .user_answers.get()을 사용하여 안전하게 답변 가져오기
+        user_ans = st.session_state.user_answers.get(idx, "미선택")
+        if user_ans == prob['answer']:
             score += 1
             
     st.metric("점수", f"{score} / {len(PROBLEMS)}")
