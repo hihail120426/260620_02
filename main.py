@@ -2,7 +2,7 @@ import streamlit as st
 import graphviz
 
 # --- 페이지 설정 및 스타일 ---
-st.set_page_config(page_title="중1 프로그래밍: 순서도 챌린지", layout="wide")
+st.set_page_config(page_title="프로그래밍: 순서도 챌린지", layout="wide")
 
 # --- 문제 데이터 정의 ---
 PROBLEMS = [
@@ -90,7 +90,7 @@ if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
 # --- 메인 화면 ---
-st.title("중1 프로그래밍: 순서도 맞추기 챌린지")
+st.title("프로그래밍: 순서도 맞추기 챌린지")
 st.subheader("빈칸을 채워 완성된 순서도를 만들어보세요!")
 st.write("---")
 
