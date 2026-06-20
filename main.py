@@ -204,4 +204,4 @@ else:
     detailed_results = []
     
     for idx, prob in enumerate(PROBLEMS):
-        user_ans = st.session_state.
+        user_ans = st.session_state.quiz_answers
