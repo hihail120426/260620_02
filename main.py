@@ -1,8 +1,7 @@
 import streamlit as st
 import random
 
-# --- 세션 상태 초기화 ---
-# 퀴즈 상태를 관리하기 위한 세션 상태 변수들을 초기화합니다.
+# --- 세션 상태 초기화 (기존과 동일) ---
 if 'quiz_started' not in st.session_state:
     st.session_state.quiz_started = False
 if 'current_problem' not in st.session_state:
@@ -14,40 +13,44 @@ if 'quiz_submitted' not in st.session_state:
 if 'shuffled_options' not in st.session_state:
     st.session_state.shuffled_options = []
 
-# --- 퀴즈 데이터 ---
-# 퀴즈 문제, 정답, 그리고 각 문제에 대한 보기를 정의합니다.
-# 각 보기는 문자와 모양(형태)을 가집니다.
+# --- 퀴즈 데이터 정의 (수정됨) ---
+# 각 문제의 보기에 "shape"(도형 형태) 정보를 추가했습니다.
 problems = [
     {
         "id": 1,
         "title": "문제 1: 알고리즘의 시작",
-        "question": "알고리즘의 시작을 나타내는 도형은 무엇일까요?",
+        "question": "알고리즘의 '시작'을 나타내는 빈칸에 들어갈 올바른 블록은 무엇일까요?",
         "options": [
-            {"char": "A", "shape": "타원"}, # Oval (타원)
-            {"char": "B", "shape": "직사각형"}, # Process (직사각형)
-            {"char": "C", "shape": "마름모"}, # Decision (마름모)
-            {"char": "D", "shape": "평행사변형"} # Input/Output (평행사변형)
+            # 정답은 타원 형태의 A입니다.
+            {"char": "A", "shape": "타원", "label": "A (시작/타원)"}, 
+            {"char": "B", "shape": "직사각형", "label": "B (처리/직사각형)"},
+            {"char": "C", "shape": "마름모", "label": "C (조건/마름모)"},
+            {"char": "D", "shape": "직사각형", "label": "D (연산/직사각형)"}
         ],
         "answer_char": "A"
     },
     {
         "id": 2,
         "title": "문제 2: 처리 단계",
-        "question": "계산이나 동작과 같은 처리 단계를 나타내는 도형은?",
+        "question": "계산이나 동작과 같은 '처리' 단계를 나타내는 도형은?",
         "options": [
-            {"char": "A", "shape": "타원"}, 
-            {"char": "B", "shape": "직사각형"},
-            {"char": "C", "shape": "마름모"},
-            {"char": "D", "shape": "평행사변형"}
+            {"char": "A", "shape": "타원", "label": "A (시작/타원)"},
+            {"char": "B", "shape": "직사각형", "label": "B (처리/직사각형)"}, # 정답
+            {"char": "C", "shape": "마름모", "label": "C (조건/마름모)"},
+            {"char": "D", "shape": "평행사변형", "label": "D (입출력/평행사변형)"}
         ],
         "answer_char": "B"
     },
-    # 다른 문제들을 추가할 수 있습니다.
+    # 추가 문제들을 이 형식으로 확장할 수 있습니다.
 ]
 
-# --- 함수 정의 ---
+# --- 공통 함수 정의 (기존과 동일) ---
+def prepare_options():
+    p = problems[st.session_state.current_problem]
+    options = p['options'].copy()
+    random.shuffle(options) # 보기를 셔플합니다.
+    st.session_state.shuffled_options = options
 
-# 퀴즈 시작 함수
 def start_quiz():
     st.session_state.quiz_started = True
     st.session_state.current_problem = 0
@@ -55,96 +58,117 @@ def start_quiz():
     st.session_state.quiz_submitted = False
     prepare_options()
 
-# 다음 문제 함수
 def next_problem():
     if st.session_state.current_problem < len(problems) - 1:
         st.session_state.current_problem += 1
         prepare_options()
 
-# 이전 문제 함수
 def prev_problem():
     if st.session_state.current_problem > 0:
         st.session_state.current_problem -= 1
         prepare_options()
 
-# 보기를 셔플하고 준비하는 함수
-def prepare_options():
-    p = problems[st.session_state.current_problem]
-    options = p['options'].copy()
-    random.shuffle(options)
-    st.session_state.shuffled_options = options
-
-# 퀴즈 제출 함수
 def submit_quiz():
     st.session_state.quiz_submitted = True
 
-# --- 메인 앱 ---
+# --- 메인 앱 구성 ---
 
-# 앱 제목
-st.title("대화형 순서도 퀴즈")
+# 앱 제목 및 기본 스타일
+st.set_page_config(layout="wide") # 화면을 넓게 사용
+st.title("대화형 순서도 퀴즈 (Interactive Puzzle)")
+st.write("---")
 
-# 퀴즈가 시작되지 않은 경우
+# 퀴즈 시작 전
 if not st.session_state.quiz_started:
     st.header("대화형 순서도 퀴즈에 오신 것을 환영합니다!")
-    st.write("이 퀴즈는 순서도 도형과 그 의미를 배우는 데 도움이 됩니다.")
+    st.write("왼쪽에 표시된 순서도의 빈칸 [?]에 들어갈 올바른 도형을 맞추는 퀴즈입니다.")
     st.button("퀴즈 시작", on_click=start_quiz)
 
-# 퀴즈가 진행 중이고 제출되지 않은 경우
+# 퀴즈 진행 중 (미제출)
 elif not st.session_state.quiz_submitted:
     p = problems[st.session_state.current_problem]
-    st.header(f"문제 {p['id']}: {p['title']}")
-    st.write(p['question'])
-
-    # 보기를 표시합니다.
-    st.write("---")
-    cols = st.columns(len(p['options']))
-    for i, opt in enumerate(st.session_state.shuffled_options):
-        with cols[i]:
-            # 각 보기를 시각적으로 표현합니다 (간단한 스타일 적용).
-            st.markdown(f"""
-                <div style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; text-align: center; background-color: #f9f9f9; width: 150px; height: 150px;">
-                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">{opt['char']}</div>
-                    <div style="font-size: 14px; color: #555;">({opt['shape']})</div>
-                    <div style="border: 2px solid #333; border-radius: 5px; width: 100px; height: 50px; margin: 10px auto; {'border-radius: 25px;' if opt['shape'] == '타원' else ''} {'transform: skew(-20deg);' if opt['shape'] == '평행사변형' else ''}"></div>
-                </div>
-            """, unsafe_allow_html=True)
-            # 각 보기에 대한 라디오 버튼 (간접적인 선택 방식)
-            st.radio(label="", options=["선택", ""], index=1, key=f"prob_{p['id']}_opt_{opt['char']}")
-
-    st.write("---")
-
-    # 이동 버튼
-    cols_nav = st.columns([1, 1, 3])
-    with cols_nav[0]:
-        st.button("이전 문제", on_click=prev_problem, disabled=st.session_state.current_problem == 0)
-    with cols_nav[1]:
-        st.button("다음 문제", on_click=next_problem, disabled=st.session_state.current_problem == len(problems) - 1)
     
-    # 마지막 문제인 경우 제출 버튼을 표시합니다.
-    if st.session_state.current_problem == len(problems) - 1:
-        st.write(" ")
-        st.button("퀴즈 제출", on_click=submit_quiz, key="submit_button")
+    # 퀴즈 진행 상황 표시 (metric 사용)
+    st.metric(label=f"진행 상황 (문제 {p['id']})", value=f"{st.session_state.current_problem + 1} / {len(problems)}")
+    st.write("---")
 
-# 퀴즈가 제출된 경우 (결과 페이지)
-else:
-    st.header("퀴즈 결과")
-    st.write("각 문제에 대한 정답을 확인하세요.")
+    # [수정] 화면 레이아웃 (왼쪽: 문제 및 보기, 오른쪽: 진행 상태 및 제출)
+    col1, col2 = st.columns([2, 1])
 
-    score = 0
-    results_list = []
-    # 정답을 확인하고 결과를 생성합니다.
-    for idx, p in enumerate(problems):
-        # 여기에 실제 사용자 답변을 확인하는 로직이 필요합니다.
-        # 이 예시에서는 답변 수집 로직이 빠져 있습니다.
-        # 실제 앱에서는 사용자가 각 보기를 선택했을 때 
-        # st.session_state.user_answers[idx]에 답변을 저장해야 합니다.
-        # 예: user_ans = st.session_state.user_answers.get(idx, "미답변")
+    with col1:
+        st.header(f"문제 {p['id']}: {p['title']}")
+        st.write(p['question'])
+        st.write("---")
+
+        # [핵심 수정] 보기 디자인: 도형 안에 문자가 있는 형태로 변경
+        # 보기를 가로 4개 컬럼으로 나눕니다.
+        cols_opt = st.columns(len(p['options']))
+        for i, opt in enumerate(st.session_state.shuffled_options):
+            with cols_opt[i]:
+                # 도형 형태에 따라 CSS 스타일을 동적으로 적용합니다.
+                border_radius = "25px" if opt['shape'] == "타원" else "5px"
+                skew = "skew(-20deg)" if opt['shape'] == "평행사변형" else "none"
+                # 평행사변형일 때 내부 텍스트가 같이 찌그러지지 않도록 반대로 찌그려줍니다.
+                text_skew = "skew(20deg)" if opt['shape'] == "평행사변형" else "none"
+
+                # HTML/CSS를 사용하여 도형 형태의 보기를 생성합니다.
+                # data-testid 속성을 추가하여 나중에 선택 로직에 활용할 수 있게 합니다.
+                st.markdown(f"""
+                    <div style="border: 2px solid #bdbdbd; border-radius: {border_radius}; transform: {skew}; padding: 20px; text-align: center; background-color: white; min-width: 150px; min-height: 100px; margin: 10px 0; cursor: pointer;" 
+                         data-testid="option-block" data-char="{opt['char']}">
+                        <div style="font-size: 32px; font-weight: bold; transform: {text_skew};">{opt['char']}</div>
+                        <div style="font-size: 12px; color: #757575; transform: {text_skew};">({opt['shape']})</div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+                # 실제 선택을 위한 라디오 버튼 (간접 선택)
+                # 이 예시에서는 버튼 클릭을 직접 감지하는 복잡한 JavaScript 없이,
+                # 라디오 버튼을 하단에 배치하여 선택하도록 합니다.
+                st.radio(label="", options=["선택 안 함", opt['char']], index=0, key=f"prob_{p['id']}_opt_{opt['char']}_radio")
+
+    with col2:
+        st.subheader("진행 상태")
+        st.write(f"현재 풀고 있는 문제: **{p['id']}**")
         
-        # 임시 답변 (사용자 답변 수집 로직 추가 필요)
-        # st.session_state.user_answers[0] = "A" 
-        # st.session_state.user_answers[1] = "C"
+        # 이전/다음 문제 이동 버튼
+        cols_nav = st.columns([1, 1])
+        with cols_nav[0]:
+            st.button("⬅️ 이전 문제", on_click=prev_problem, disabled=st.session_state.current_problem == 0)
+        with cols_nav[1]:
+            st.button("다음 문제 ➡️", on_click=next_problem, disabled=st.session_state.current_problem == len(problems) - 1)
+        
+        st.write("---")
+        
+        # 마지막 문제일 때 제출 버튼 활성화
+        if st.session_state.current_problem == len(problems) - 1:
+            st.write("모든 문제를 풀었다면 제출하세요.")
+            st.button("🚀 퀴즈 제출", on_click=submit_quiz, type="primary")
 
+    # 실제 앱에서는 사용자가 각 라디오 버튼을 선택했을 때 세션 상태에 저장하는 로직이 필요합니다.
+    # 예: user_ans = st.session_state.user_answers.get(idx, "미답변")
+
+# 퀴즈 제출 후 (결과 화면)
+else:
+    st.header("🏁 퀴즈 결과 및 분석 리포트")
+    st.write("---")
+    
+    score = 0
+    detailed_results = []
+    
+    # 결과를 채점하고 리스트에 저장합니다.
+    for idx, p in enumerate(problems):
+        # [수정] 실제 사용자 답변을 세션 상태에서 가져오는 로직 추가
+        # 사용자가 선택한 라디오 버튼 값을 가져옵니다. 
+        # (이 예시에서는 답변 수집 로직이 생략되었으므로, 실제 앱에서는 보완해야 합니다.)
+        # user_ans = st.session_state.user_answers.get(idx, "미답변") 
+        
+        # 임시 답변 (사용자 답변 수집 로직이 완성된 후 주석 해제하세요)
+        # st.session_state.user_answers[0] = "A" 
+        # st.session_state.user_answers[1] = "D"
+        
+        # 답변 수집 로직 보완 전까지는 '미답변'으로 처리됩니다.
         user_ans = st.session_state.user_answers.get(idx, "미답변")
+        
         correct_ans = p["answer_char"]
         is_correct = (user_ans == correct_ans)
         
@@ -154,24 +178,16 @@ else:
         else:
             result_symbol = "❌ (오답)"
 
-        # 각 문제에 대한 상세 결과를 구성합니다.
-        # 사용자가 선택한 답변의 문자뿐만 아니라 모양도 포함할 수 있습니다.
-        # 예: 사용자 답변: A (타원), 정답: A (타원)
+        results_list.append(f"**문제 {p['id']}:** {p['title']} - 사용자 답변: `{user_ans}`, 정답: `{correct_ans}` - 결과: {result_symbol}")
 
-        # 예시 결과를 만듭니다.
-        # detailed_result = f"**문제 {p['id']}:** {p['title']}\n"
-        # detailed_result += f"- 사용자 답변: {user_ans}\n"
-        # detailed_result += f"- 정답: {correct_ans}\n"
-        # detailed_result += f"- 결과: {result_symbol}\n\n"
-        # results_list.append(detailed_result)
-
-        # 사진을 보며 작성한 예시 코드 조각 (결과 처리 로직)
-        results_list.append(f"**문제 {p['id']}:** 사용자 답변: `{user_ans}`, 정답: `{correct_ans}` - 결과: {result_symbol}")
-
-    # 최종 점수를 표시합니다.
-    st.write(f"### 최종 점수: {score} / {len(problems)}")
+    # 최종 점수 표시
+    st.write(f"### 🏆 최종 점수: {score} / {len(problems)}")
+    st.write("---")
+    
+    # 문항별 세부 결과 표시
+    st.subheader("문항별 분석")
     for r in results_list:
         st.markdown(r)
 
-    if st.button("다시 풀기"):
+    if st.button("🔄 다시 풀기"):
         start_quiz()
